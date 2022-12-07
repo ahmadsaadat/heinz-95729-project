@@ -3,6 +3,7 @@ npm run format
 
 #set the correct environment variable
 export AWS_DEFAULT_PROFILE=ecomm
+export AWS_DEFAULT_REGION=us-east-1
 
 #remove previous zip folder
 rm ./deployable.zip

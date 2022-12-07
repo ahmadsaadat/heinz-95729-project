@@ -28,6 +28,7 @@
     },
     "dependencies": {
         "actions-on-google": "^3.0.0",
-        "dialogflow": "^1.2.0"
+        "dialogflow": "^4.0.3",
+        "mongodb": "^4.12.1"
     }
 }

@@ -1,0 +1,16 @@
+<html>
+<header>
+<script>
+    
+const { MongoClient, ServerApiVersion } = require('mongodb');
+const uri = "mongodb+srv://ecomm:0Ax6t45R3tdgU8oR@cluster0.z4xh1w1.mongodb.net/?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
+client.connect(err => {
+  const collection = client.db("test").collection("devices");
+  alert(collection.getOne());
+  client.close();
+});
+
+</script>
+</header>
+</html>
