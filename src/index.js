@@ -23,7 +23,6 @@ async function insert_cart_item(user_id, items) {
             await client.db('main').collection('order').insertOne(rec).catch();
         } else {
             const update_query = { user_id: user_id };
-            console.log('has document');
 
             // add the current coffee into the document
             await client
@@ -61,7 +60,6 @@ async function insert_cart_item(user_id, items) {
                     .db('main')
                     .collection('order')
                     .updateOne({ user_id: user_id }, { $set: doc });
-                return doc;
             }
         }
     } catch (e) {
@@ -101,10 +99,10 @@ app.intent('order.additem', (conv) => {
 
     params = conv.body.queryResult.parameters;
     items = params['number-coffee'];
-    console.log(items);
+
     insert_cart_item(user_id, items);
 
-    conv.ask('Coffee added to cart. Current cart includes ');
+    conv.ask('Coffee added to order.');
 });
 
 exports.handler = app;
