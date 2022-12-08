@@ -69,6 +69,26 @@ async function insert_cart_item(user_id, items) {
     }
 }
 
+async function show_cart(user_id) {
+    try {
+        await client.connect();
+        const query = { user_id: user_id, placed: false };
+        const findResult = await client
+            .db('main')
+            .collection('order')
+            .findOne(query);
+        for await (const doc of findResult) {
+            console.log(doc);
+        }
+        return 'Your current order includes ';
+    } catch (e) {
+        console.error(e);
+        return 'Error in reading your card';
+    } finally {
+        await client.close();
+    }
+}
+
 const app = dialogflow({ debug: true });
 console.log('in index.js');
 
@@ -103,6 +123,18 @@ app.intent('order.additem', (conv) => {
     insert_cart_item(user_id, items);
 
     conv.ask('Coffee added to order.');
+});
+
+app.intent('order.showcart', (conv) => {
+    console.log('showcart');
+
+    // user id is 1 for the same reason
+    user_id = 1;
+
+    // need to get data from show_cart(user_id) and reply to the user
+    cart_item = '';
+
+    conv.ask('Your cart includes ' + cart_item);
 });
 
 exports.handler = app;
