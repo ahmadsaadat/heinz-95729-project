@@ -3,28 +3,67 @@
 const { dialogflow, Image } = require('actions-on-google');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
-async function insert_cart_item(user_id, cart_item, quantity) {
-    /**
-     * Connection URI. Update <username>, <password>, and <your-cluster-url> to reflect your cluster.
-     * See https://docs.mongodb.com/ecosystem/drivers/node/ for more details
-     */
-    const uri =
-        'mongodb+srv://ecomm:0Ax6t45R3tdgU8oR@cluster0.z4xh1w1.mongodb.net/?retryWrites=true&w=majority';
+const uri =
+    'mongodb+srv://ecomm:0Ax6t45R3tdgU8oR@cluster0.z4xh1w1.mongodb.net/?retryWrites=true&w=majority';
+const client = new MongoClient(uri);
 
-    const client = new MongoClient(uri);
-
+async function insert_cart_item(user_id, items) {
     var rec = {
         user_id: user_id,
-        cart: { cart_item: cart_item, quantity: quantity },
+        items,
+        placed: false,
     };
 
     try {
         await client.connect();
-        await client
-            .db('main')
-            .collection('order')
-            .insertOne(rec)
-            .catch(console.log('failed insertion'));
+        const query = { user_id: user_id, placed: false };
+        newdoc = await client.db('main').collection('order').findOne(query);
+
+        if (newdoc == null) {
+            await client.db('main').collection('order').insertOne(rec).catch();
+        } else {
+            const update_query = { user_id: user_id };
+            console.log('has document');
+
+            // add the current coffee into the document
+            await client
+                .db('main')
+                .collection('order')
+                .updateOne(update_query, {
+                    $push: { items: { $each: items } },
+                });
+
+            // aggregate duplicated coffees
+            const agg = [
+                { $unwind: '$items' },
+                {
+                    $group: {
+                        _id: '$items.coffee',
+                        number: { $sum: '$items.number' },
+                    },
+                },
+                {
+                    $group: {
+                        _id: 0,
+                        items: { $push: { coffee: '$_id', number: '$number' } },
+                    },
+                },
+                { $project: { _id: 0, items: 1 } },
+            ];
+
+            const result = await client
+                .db('main')
+                .collection('order')
+                .aggregate(agg);
+
+            for await (const doc of result) {
+                await client
+                    .db('main')
+                    .collection('order')
+                    .updateOne({ user_id: user_id }, { $set: doc });
+                return doc;
+            }
+        }
     } catch (e) {
         console.error(e);
     } finally {
@@ -53,19 +92,19 @@ app.intent('Default Fallback Intent', (conv) => {
 });
 
 app.intent('order.additem', (conv) => {
-    console.log(JSON.stringify(conv));
     console.log('additem');
-    console.log(JSON.stringify(conv.body.queryResult.parameters));
 
     // user id is assumed to be always one
     // this isn't correct in production, but within the scope of project, user
     // authentication / authorization will be too much work
     user_id = 1;
-    item = 'coffee';
-    quantity = 1;
-    insert_cart_item(user_id, item, quantity);
 
-    conv.ask('Yes');
+    params = conv.body.queryResult.parameters;
+    items = params['number-coffee'];
+    console.log(items);
+    insert_cart_item(user_id, items);
+
+    conv.ask('Coffee added to cart. Current cart includes ');
 });
 
 exports.handler = app;
