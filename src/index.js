@@ -9,6 +9,7 @@ const {
 
 const app = dialogflow({ debug: true });
 const Personalization = require('./Personalization');
+const Menu = require('./Menu');
 const ResponseCodes = require('./ResponseCodes');
 
 console.log('in index.js');
@@ -69,6 +70,13 @@ app.intent('Personalize-followup', async (conv, event) => {
     );
     conv.ask(
         `Is there anything else you'd like to do? You can say things like order coffee or hear the menu`
+    );
+});
+
+app.intent('Menu', async (conv) => {
+    let menu = new Menu().render();
+    conv.ask(
+        `The menu consists of ${menu}, would you like to Order or Personalize?`
     );
 });
 
