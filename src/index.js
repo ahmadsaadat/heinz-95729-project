@@ -88,7 +88,7 @@ app.intent('Help', (conv, event) => {
     );
 });
 
-app.intent('order.additem', (conv, event) => {
+app.intent('order.additem', (conv) => {
     console.log('additem');
 
     // user id is assumed to be always one
