@@ -3,11 +3,16 @@ const uri =
     'mongodb+srv://ecomm:0Ax6t45R3tdgU8oR@cluster0.z4xh1w1.mongodb.net/?retryWrites=true&w=majority';
 const client = new MongoClient(uri);
 
-// eslint-disable-next-line no-unused-vars
+/*
+TODO: to set up full personalization, this will require more work 
+such as setting up user authentication & authorization, however for now
+we will assume that one person is using this app, thus user_id will always be 1
+*/
+const user_id = 1;
 class dbExecutor {
     constructor() {}
 
-    async insert_cart_item(user_id, items) {
+    async insertCartItem(user_id, items) {
         var rec = {
             user_id: user_id,
             items,
@@ -77,4 +82,45 @@ class dbExecutor {
             await client.close();
         }
     }
+
+    async updateProfileItems(coffee, location) {
+        let update = {
+            $set: {
+                favorite_drink: coffee,
+                favorite_location: location,
+            },
+        };
+
+        await client.connect();
+        return await client
+            .db('main')
+            .collection('profile')
+            .updateOne({ user_id: user_id }, update, { upsert: false })
+            .then(() => {
+                client.close();
+                return;
+            });
+    }
+
+    async readProfileItem() {
+        let userProfile = {};
+        userProfile = await client
+            .db('main')
+            .collection('profile')
+            .findOne({ user_id: user_id })
+            .then((document) => {
+                client.close();
+                return document;
+            })
+            .catch((err) => {
+                client.close();
+                return null;
+            });
+
+        console.log('userProfile: ' + JSON.stringify(userProfile));
+
+        return userProfile;
+    }
 }
+
+module.exports = dbExecutor;

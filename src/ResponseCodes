@@ -1,0 +1,6 @@
+const responseCodes = {
+    //Personalize
+    USER_DOES_NOT_EXIST: "USER_DOES_NOT_EXIST"
+};
+
+module.exports = responseCodes;
