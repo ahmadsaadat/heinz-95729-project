@@ -17,6 +17,7 @@ class dbExecutor {
             user_id: user_id,
             items,
             placed: false,
+            time: new Date(),
         };
 
         try {
@@ -34,18 +35,17 @@ class dbExecutor {
                     .insertOne(rec)
                     .catch();
             } else {
-                const update_query = { user_id: user_id };
-
                 // add the current coffee into the document
                 await client
                     .db('main')
                     .collection('order')
-                    .updateOne(update_query, {
+                    .updateOne(query, {
                         $push: { items: { $each: items } },
                     });
 
                 // aggregate duplicated coffees
                 const agg = [
+                    { $match: { placed: false, user_id: user_id } },
                     { $unwind: '$items' },
                     {
                         $group: {
@@ -73,7 +73,7 @@ class dbExecutor {
                     await client
                         .db('main')
                         .collection('order')
-                        .updateOne({ user_id: user_id }, { $set: doc });
+                        .updateOne(query, { $set: doc });
                 }
             }
         } catch (e) {
@@ -81,6 +81,72 @@ class dbExecutor {
         } finally {
             await client.close();
         }
+    }
+
+    async showCartItem(user_id) {
+        let cart = {};
+
+        await client.connect();
+        cart = await client
+            .db('main')
+            .collection('order')
+            .findOne({ user_id: user_id, placed: false })
+            .then((document) => {
+                console.log(document);
+                client.close();
+                if (!document) {
+                    return [];
+                } else {
+                    return document.items;
+                }
+            })
+            .catch((err) => {
+                console.log(err);
+                client.close();
+                return [];
+            });
+
+        //console.log('cart: ' + JSON.stringify(cart));
+
+        return cart;
+    }
+
+    async placeOrder(user_id) {
+        let update = {
+            $set: {
+                placed: true,
+            },
+        };
+
+        await client.connect();
+        return await client
+            .db('main')
+            .collection('order')
+            .updateOne({ user_id: user_id, placed: false }, update, {
+                upsert: false,
+            })
+            .then(() => {
+                client.close();
+                return;
+            });
+    }
+
+    async clearCart(user_id) {
+        let update = {
+            $set: {
+                items: [],
+            },
+        };
+
+        await client.connect();
+        return await client
+            .db('main')
+            .collection('order')
+            .deleteOne({ user_id: user_id, placed: false })
+            .then(() => {
+                client.close();
+                return;
+            });
     }
 
     async updateProfileItems(coffee, location) {

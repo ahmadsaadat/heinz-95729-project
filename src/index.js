@@ -6,6 +6,7 @@ const {
     BasicCard,
     Suggestions,
 } = require('actions-on-google');
+const dbExecutor = require('./dbExecutor');
 
 const app = dialogflow({ debug: true });
 const Personalization = require('./Personalization');
@@ -72,20 +73,61 @@ app.intent('Personalize-followup', async (conv, event) => {
     );
 });
 
-app.intent('order.additem', (conv) => {
+app.intent('order.additem', async (conv) => {
     console.log('additem');
 
     // user id is assumed to be always one
     // this isn't correct in production, but within the scope of project, user
     // authentication / authorization will be too much work
-    // user_id = 1;
+    user_id = 1;
 
-    // params = conv.body.queryResult.parameters;
-    // items = params['number-coffee'];
+    params = conv.body.queryResult.parameters;
+    items = params['number-coffee'];
 
-    // insert_cart_item(user_id, items);
+    await new dbExecutor().insertCartItem(user_id, items);
 
     conv.ask('Coffee added to order.');
+});
+
+app.intent('order.showcart', async (conv) => {
+    console.log('showcart');
+
+    // id is fixed to 1 for the same reason
+    user_id = 1;
+
+    var result = await new dbExecutor().showCartItem(1).then();
+
+    if (result.length == 0) {
+        reply = 'Your cart is empty! Maybe consider add some coffees!';
+    } else {
+        reply = 'Your cart includes ';
+        result.forEach(function (value, i) {
+            if (i == 0) {
+                reply =
+                    reply + result[0].number + ' cups of ' + result[0].coffee;
+            } else {
+                reply =
+                    reply +
+                    ' and ' +
+                    result[i].number +
+                    ' cups of ' +
+                    result[i].coffee;
+            }
+        });
+    }
+    console.log(reply);
+    conv.ask(reply);
+});
+
+app.intent('order.clearcart', async (conv) => {
+    console.log('clear cart');
+
+    // id is fixed to 1 for the same reason
+    user_id = 1;
+
+    await new dbExecutor().clearCart(user_id);
+
+    conv.ask('Your cart has been cleared.');
 });
 
 exports.handler = app;
