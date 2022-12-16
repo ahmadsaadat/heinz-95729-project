@@ -9,10 +9,12 @@ const menuItems = [
     'Cold Brew',
 ];
 
+const toppingItems = ['Cinnamon', 'Caramel'];
+
 class Menu {
     constructor() {}
 
-    render() {
+    renderMenu() {
         let menuString = '';
 
         menuString += menuItems[0];
@@ -22,6 +24,17 @@ class Menu {
         menuString += ' and ' + menuItems[menuItems.length - 1];
 
         return menuString;
+    }
+
+    renderToppings() {
+        let toppingString = '';
+
+        toppingString = toppingItems[0];
+        for (let i = 1; i < toppingItems.length; i++) {
+            toppingString += 'and ' + toppingItems[i];
+        }
+
+        return toppingString;
     }
 }
 

@@ -12,15 +12,13 @@ const Personalization = require('./Personalization');
 const Menu = require('./Menu');
 const ResponseCodes = require('./ResponseCodes');
 
-console.log('in index.js');
-
-app.intent('Default Welcome Intent', (conv) => {
+app.intent('Default Welcome Intent', (conv, event) => {
     conv.ask(
         'Welcome to Starbux! You can say things like: Hear menu or place an order'
     );
     conv.ask(
         new BasicCard({
-            text: `Welcome to Starbux! You can say things like: Hear menu, place an order or personalize`,
+            text: `Welcome to Starbux! You can say things like: Hear menu, place an order or personalize. Say help if you ever need help.`,
             title: 'Welcome to Starbux!',
             image: new Image({
                 url: 'https://ecomm-starbux-artifact-bucket.s3.amazonaws.com/starbux_welcome_picture.jpg',
@@ -28,10 +26,12 @@ app.intent('Default Welcome Intent', (conv) => {
             }),
         })
     );
-    conv.ask(new Suggestions(['Hear Menu', 'Place an order', 'Personalize']));
+    conv.ask(
+        new Suggestions(['Hear Menu', 'Place an order', 'Personalize', 'Help'])
+    );
 });
 
-app.intent('Default Fallback Intent', (conv) => {
+app.intent('Default Fallback Intent', (conv, event) => {
     conv.ask(
         `Sorry I didn't get that, you can say things like Hear the menu, place an order or personalize`
     );
@@ -71,16 +71,24 @@ app.intent('Personalize-followup', async (conv, event) => {
     conv.ask(
         `Is there anything else you'd like to do? You can say things like order coffee or hear the menu`
     );
+    conv.ask(new Suggestions(['Order Coffee', 'Hear Menu']));
 });
 
-app.intent('Menu', async (conv) => {
-    let menu = new Menu().render();
+app.intent('Menu', async (conv, event) => {
+    let menu = new Menu();
     conv.ask(
-        `The menu consists of ${menu}, would you like to Order or Personalize?`
+        `The menu consists of ${menu.renderMenu()}, and toppings consists of ${menu.renderToppings()}. Would you like to Order Coffee or Personalize?`
+    );
+    conv.ask(new Suggestions(['Order Coffee', 'Personalize']));
+});
+
+app.intent('Help', (conv, event) => {
+    conv.ask(
+        `Let me help you. To order a custom drink, you can say 'order cinammon latte', once you've added everything to your cart you can say 'checkout' and the system will place your order for pickup at the location of your choosing.`
     );
 });
 
-app.intent('order.additem', (conv) => {
+app.intent('order.additem', (conv, event) => {
     console.log('additem');
 
     // user id is assumed to be always one
