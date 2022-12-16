@@ -6,11 +6,12 @@ const {
     BasicCard,
     Suggestions,
 } = require('actions-on-google');
-const dbExecutor = require('./dbExecutor');
+const dbExecutor = require('./DatabaseExecutor');
 
 const app = dialogflow({ debug: true });
 const Personalization = require('./Personalization');
 const Menu = require('./Menu');
+const Cart = require('./Cart');
 const ResponseCodes = require('./ResponseCodes');
 
 app.intent('Default Welcome Intent', (conv, event) => {
@@ -64,8 +65,6 @@ app.intent('Personalize-followup', async (conv, event) => {
         event.location['street-address']
     );
 
-    console.log('updateStatus: ' + updateStatus);
-
     conv.ask(
         `Okay I have updated your favorite drink to ${event.Coffee} and your favorite pick up location to ${event.location['street-address']}`
     );
@@ -89,61 +88,47 @@ app.intent('Help', (conv, event) => {
     );
 });
 
-app.intent('order.additem', async (conv) => {
-    console.log('additem');
-
-    // user id is assumed to be always one
-    // this isn't correct in production, but within the scope of project, user
-    // authentication / authorization will be too much work
-    user_id = 1;
-
-    params = conv.body.queryResult.parameters;
-    items = params['number-coffee'];
-
-    await new dbExecutor().insertCartItem(user_id, items);
-
-    conv.ask('Coffee added to order.');
+app.intent('Add Item', async (conv, event) => {
+    let addCartResponse = await new Cart().addToCart(conv);
+    conv.ask(
+        `Okay I have added ${addCartResponse} to your cart, you can either add another drink or when you're ready you can say checkout.`
+    );
+    conv.ask(new Suggestions(['Add Latte', 'Check Out', 'Hear Menu', 'Cart']));
 });
 
-app.intent('order.showcart', async (conv) => {
-    console.log('showcart');
-
-    // id is fixed to 1 for the same reason
-    user_id = 1;
-
-    var result = await new dbExecutor().showCartItem(1).then();
-
-    if (result.length == 0) {
-        reply = 'Your cart is empty! Maybe consider add some coffees!';
+app.intent('Show Cart', async (conv) => {
+    let showCartResponse = await new Cart().showCart();
+    if (showCartResponse.code == ResponseCodes.CART_IS_EMPTY) {
+        conv.ask(showCartResponse.reply);
+        conv.ask(new Suggestions(['Add Cinnamon Latte']));
     } else {
-        reply = 'Your cart includes ';
-        result.forEach(function (value, i) {
-            if (i == 0) {
-                reply =
-                    reply + result[0].number + ' cups of ' + result[0].coffee;
-            } else {
-                reply =
-                    reply +
-                    ' and ' +
-                    result[i].number +
-                    ' cups of ' +
-                    result[i].coffee;
-            }
-        });
+        conv.ask(showCartResponse.reply);
+        conv.ask(new Suggestions(['Yes', 'No', 'Clear Cart']));
     }
-    console.log(reply);
-    conv.ask(reply);
+});
+
+app.intent('Show Cart - yes', async (conv) => {
+    conv.ask(`Your order will be available for pickup in a little bit`);
+});
+
+app.intent('Show Cart - no', async (conv) => {
+    conv.ask(`Ok, you can either add drinks to your cart, or clear your cart`);
+    conv.ask(new Suggestions(['Add Caramel Iced Latte', 'Clear Cart']));
 });
 
 app.intent('order.clearcart', async (conv) => {
     console.log('clear cart');
-
-    // id is fixed to 1 for the same reason
-    user_id = 1;
-
-    await new dbExecutor().clearCart(user_id);
-
+    new dbExecutor().clearCart();
     conv.ask('Your cart has been cleared.');
+});
+
+app.intent('Place Order', async (conv) => {
+    conv.ask(
+        'Ok, what would you like to order? You can say things like Black Coffee, Cinnamon Iced Latte or Hear menu'
+    );
+    conv.ask(
+        new Suggestions(['Black Coffee', 'Cinnamon Iced Latte', 'Hear Menu'])
+    );
 });
 
 exports.handler = app;

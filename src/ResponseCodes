@@ -1,6 +1,8 @@
 const responseCodes = {
     //Personalize
-    USER_DOES_NOT_EXIST: "USER_DOES_NOT_EXIST"
+    USER_DOES_NOT_EXIST: "USER_DOES_NOT_EXIST",
+    //Cart
+    CART_IS_EMPTY: "CART_IS_EMPTY"
 };
 
 module.exports = responseCodes;
