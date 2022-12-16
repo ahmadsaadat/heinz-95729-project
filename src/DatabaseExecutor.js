@@ -9,10 +9,10 @@ such as setting up user authentication & authorization, however for now
 we will assume that one person is using this app, thus user_id will always be 1
 */
 const user_id = 1;
-class dbExecutor {
+class DatabaseExecutor {
     constructor() {}
 
-    async insertCartItem(user_id, items) {
+    async insertCartItem(items) {
         var rec = {
             user_id: user_id,
             items,
@@ -35,46 +35,12 @@ class dbExecutor {
                     .insertOne(rec)
                     .catch();
             } else {
-                // add the current coffee into the document
                 await client
                     .db('main')
                     .collection('order')
                     .updateOne(query, {
-                        $push: { items: { $each: items } },
+                        $push: { items: items[0] },
                     });
-
-                // aggregate duplicated coffees
-                const agg = [
-                    { $match: { placed: false, user_id: user_id } },
-                    { $unwind: '$items' },
-                    {
-                        $group: {
-                            _id: '$items.coffee',
-                            number: { $sum: '$items.number' },
-                        },
-                    },
-                    {
-                        $group: {
-                            _id: 0,
-                            items: {
-                                $push: { coffee: '$_id', number: '$number' },
-                            },
-                        },
-                    },
-                    { $project: { _id: 0, items: 1 } },
-                ];
-
-                const result = await client
-                    .db('main')
-                    .collection('order')
-                    .aggregate(agg);
-
-                for await (const doc of result) {
-                    await client
-                        .db('main')
-                        .collection('order')
-                        .updateOne(query, { $set: doc });
-                }
             }
         } catch (e) {
             console.error(e);
@@ -83,7 +49,7 @@ class dbExecutor {
         }
     }
 
-    async showCartItem(user_id) {
+    async showCartItem() {
         let cart = {};
 
         await client.connect();
@@ -131,7 +97,7 @@ class dbExecutor {
             });
     }
 
-    async clearCart(user_id) {
+    async clearCart() {
         let update = {
             $set: {
                 items: [],
@@ -189,4 +155,4 @@ class dbExecutor {
     }
 }
 
-module.exports = dbExecutor;
+module.exports = DatabaseExecutor;

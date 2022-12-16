@@ -1,4 +1,4 @@
-const dbExecutor = require('./dbExecutor');
+const dbExecutor = require('./DatabaseExecutor');
 const responseCodes = require('./ResponseCodes');
 
 function run() {
