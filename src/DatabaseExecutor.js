@@ -135,6 +135,7 @@ class DatabaseExecutor {
     }
 
     async readProfileItem() {
+        await client.connect();
         let userProfile = {};
         await client.connect();
         userProfile = await client
@@ -143,9 +144,11 @@ class DatabaseExecutor {
             .findOne({ user_id: user_id })
             .then(async function (document) {
                 await client.close().then();
+                console.log('mongo: ' + document);
                 return document;
             })
             .catch((err) => {
+                console.log('mongoError: ' + err);
                 client.close();
                 return null;
             });

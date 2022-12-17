@@ -33,6 +33,12 @@ class Personalization {
         console.log('Personalization update close');
         return;
     }
+
+    async getUserProfile() {
+        const profileItem = await new dbExecutor().readProfileItem();
+        console.log('profileItem: ' + profileItem);
+        return profileItem;
+    }
 }
 
 module.exports = Personalization;

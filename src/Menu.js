@@ -31,7 +31,7 @@ class Menu {
 
         toppingString = toppingItems[0];
         for (let i = 1; i < toppingItems.length; i++) {
-            toppingString += 'and ' + toppingItems[i];
+            toppingString += ' and ' + toppingItems[i];
         }
 
         return toppingString;
