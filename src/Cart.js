@@ -4,6 +4,15 @@ const ResponseCodes = require('./ResponseCodes');
 class Cart {
     constructor() {}
 
+    async addFavorite() {
+        console.log('add favorite');
+
+        const fav = await new dbExecutor().readProfileItem();
+        await new dbExecutor().insertCartItem([fav.favorite_drink]).then();
+
+        return fav.favorite_drink;
+    }
+
     async addToCart(conv) {
         let params = conv.body.queryResult.parameters;
         let items = params['ToppingAndCoffee'];

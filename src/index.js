@@ -96,6 +96,16 @@ app.intent('Add Item', async (conv, event) => {
     conv.ask(new Suggestions(['Add Latte', 'Check Out', 'Hear Menu', 'Cart']));
 });
 
+app.intent('Add Favorite Item', async (conv, event) => {
+    console.log('add favorite');
+    favorite_drink = await new Cart().addFavorite();
+
+    conv.ask(
+        `Okay I have added your favorite ${favorite_drink} to your cart, you can either add another drink or when you're ready you can say checkout.`
+    );
+    conv.ask(new Suggestions(['Add Latte', 'Check Out', 'Hear Menu', 'Cart']));
+});
+
 app.intent('Show Cart', async (conv) => {
     let showCartResponse = await new Cart().showCart();
     if (showCartResponse.code == ResponseCodes.CART_IS_EMPTY) {

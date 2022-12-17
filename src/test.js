@@ -11,9 +11,7 @@ function run() {
 }
 
 function add() {
-    new dbExecutor()
-        .insertCartItem(1, [{ coffee: 'Machiato', number: 1 }])
-        .then();
+    new dbExecutor().insertCartItem(['Cinnamon Cappuccino']).then();
 }
 
 async function t2() {
@@ -52,4 +50,10 @@ function clear() {
     new dbExecutor().clearCart(1);
 }
 
-add();
+async function addFac() {
+    items = await new dbExecutor().readProfileItem();
+    console.log(items.favorite_drink);
+    await new dbExecutor().insertCartItem([items.favorite_drink]).then();
+}
+
+addFac();

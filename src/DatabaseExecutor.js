@@ -136,12 +136,13 @@ class DatabaseExecutor {
 
     async readProfileItem() {
         let userProfile = {};
+        await client.connect();
         userProfile = await client
             .db('main')
             .collection('profile')
             .findOne({ user_id: user_id })
-            .then((document) => {
-                client.close();
+            .then(async function (document) {
+                await client.close().then();
                 return document;
             })
             .catch((err) => {
