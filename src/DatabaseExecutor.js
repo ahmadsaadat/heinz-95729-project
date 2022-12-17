@@ -135,16 +135,19 @@ class DatabaseExecutor {
     }
 
     async readProfileItem() {
+        await client.connect();
         let userProfile = {};
         userProfile = await client
             .db('main')
             .collection('profile')
             .findOne({ user_id: user_id })
             .then((document) => {
+                console.log('mongo: ' + document);
                 client.close();
                 return document;
             })
             .catch((err) => {
+                console.log('mongoError: ' + err);
                 client.close();
                 return null;
             });
